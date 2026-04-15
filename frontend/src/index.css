@@ -1,0 +1,36 @@
+/** @import must precede all other statements */
+@import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap");
+@import "tailwindcss";
+
+html,
+body,
+#root {
+  margin: 0;
+  padding: 0;
+  min-height: 100%;
+  font-family: "Inter", sans-serif;
+}
+
+body {
+  background-color: #f7f7f5;
+  color: #2f343b;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+:where(p, span, li, h1, h2, h3, h4, h5, h6, a, button, label, td, th) {
+  overflow-wrap: anywhere;
+  word-break: break-word;
+}
+
+pre,
+code {
+  overflow-x: auto;
+  white-space: pre;
+}
+
+html {
+  scroll-behavior: smooth;
+}
