@@ -28,14 +28,6 @@ const initialAssignedSites = [
     alternates: 10,
     status: "Active",
   },
-  {
-    id: 4,
-    name: "Skikda",
-    subtitle: "Eastern Region",
-    quota: 15,
-    alternates: 5,
-    status: "Active",
-  },
 ];
 
 const availableSites = [
@@ -48,7 +40,12 @@ const availableSites = [
 ];
 
 export default function SitesAndQuotas() {
-  const { slug, sessionId } = useParams();
+  const { id, sessionId } = useParams();
+
+  const [modal, setModal] = useState({
+    open: false,
+    siteId: null,
+  });
 
   const [assignedSites, setAssignedSites] = useState(initialAssignedSites);
   const [form, setForm] = useState({
@@ -88,8 +85,12 @@ export default function SitesAndQuotas() {
     });
   };
 
-  const handleDelete = (id) => {
-    setAssignedSites((prev) => prev.filter((site) => site.id !== id));
+  const handleDelete = () => {
+    setAssignedSites((prev) =>
+      prev.filter((site) => site.id !== modal.siteId)
+    );
+  
+    setModal({ open: false, siteId: null });
   };
 
   return (
@@ -101,7 +102,6 @@ export default function SitesAndQuotas() {
 
         <main className="flex-1 overflow-y-auto p-6">
           <div className="space-y-6">
-            {/* Breadcrumb */}
             <div className="text-sm text-[#7A8088]">
               <Link
                 to="/dashboard/admin/activities"
@@ -111,18 +111,17 @@ export default function SitesAndQuotas() {
               </Link>
               <span className="mx-2">›</span>
               <Link
-                to={`/dashboard/admin/activities/${slug}/sessions`}
+                to={`/dashboard/admin/activities/${id}/sessions`}
                 className="text-[#ED8D31] font-medium"
               >
-                Excursion à Djanet
+                Sessions
               </Link>
               <span className="mx-2">›</span>
-              <span>Session {sessionId}</span>
-              <span className="mx-2">›</span>
-              <span className="text-[#2F343B] font-medium">Sites & Quotas</span>
+              <span className="text-[#2F343B] font-medium">
+                Sites & Quotas
+              </span>
             </div>
 
-            {/* Header */}
             <div className="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-4">
               <div>
                 <h1 className="text-[38px] font-extrabold text-[#2F343B] leading-[110%]">
@@ -135,30 +134,42 @@ export default function SitesAndQuotas() {
 
               <div className="flex gap-3">
                 <Link
-                  to={`/dashboard/admin/activities/${slug}/sessions`}
+                  to={`/dashboard/admin/activities/${id}/sessions`}
                   className="px-5 py-3 rounded-[14px] border border-[#E5E2DC] bg-white text-[#2F343B] text-sm font-semibold"
                 >
                   Cancel
                 </Link>
 
-                <button
-                  className="px-5 py-3 rounded-[14px] bg-[#ED8D31] text-white text-sm font-semibold hover:bg-[#d97d26] transition-colors"
-                >
+                <button className="px-5 py-3 rounded-[14px] bg-[#ED8D31] text-white text-sm font-semibold hover:bg-[#d97d26] transition-colors">
                   Verify & Save
                 </button>
               </div>
             </div>
 
-            {/* Stats */}
             <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4">
-              <StatCard title="Assigned Sites" value={assignedSites.length} subtitle={`For Session ${sessionId}`} />
-              <StatCard title="Total Quota" value={totalQuota} subtitle="Places allocated across sites" />
-              <StatCard title="Total Alternates" value={totalAlternates} subtitle="Waitlist places available" />
-              <StatCard title="Registrations" value="342" subtitle="Currently registered employees" />
+              <StatCard
+                title="Assigned Sites"
+                value={assignedSites.length}
+                subtitle={`For Session ${sessionId}`}
+              />
+              <StatCard
+                title="Total Quota"
+                value={totalQuota}
+                subtitle="Places allocated across sites"
+              />
+              <StatCard
+                title="Total Alternates"
+                value={totalAlternates}
+                subtitle="Waitlist places available"
+              />
+              <StatCard
+                title="Registrations"
+                value="342"
+                subtitle="Currently registered employees"
+              />
             </div>
 
             <div className="grid grid-cols-1 xl:grid-cols-[2fr_340px] gap-6">
-              {/* Left table */}
               <section className="rounded-[24px] bg-white border border-[#E5E2DC] overflow-hidden">
                 <div className="px-5 py-4 border-b border-[#E5E2DC]">
                   <h2 className="text-[28px] font-bold text-[#2F343B]">
@@ -206,16 +217,12 @@ export default function SitesAndQuotas() {
                             </p>
                           </td>
 
-                          <td className="px-5 py-5">
-                            <p className="text-sm font-semibold text-[#2F343B]">
-                              {site.quota} <span className="font-normal text-[#7A8088]">places</span>
-                            </p>
+                          <td className="px-5 py-5 text-sm font-semibold text-[#2F343B]">
+                            {site.quota} <span className="font-normal text-[#7A8088]">places</span>
                           </td>
 
-                          <td className="px-5 py-5">
-                            <p className="text-sm font-semibold text-[#2F343B]">
-                              {site.alternates} <span className="font-normal text-[#7A8088]">alternates</span>
-                            </p>
+                          <td className="px-5 py-5 text-sm font-semibold text-[#2F343B]">
+                            {site.alternates} <span className="font-normal text-[#7A8088]">alternates</span>
                           </td>
 
                           <td className="px-5 py-5">
@@ -225,17 +232,17 @@ export default function SitesAndQuotas() {
                           </td>
 
                           <td className="px-5 py-5">
-                            <div className="flex gap-2">
-                              <button className="w-9 h-9 rounded-lg border border-[#E5E2DC] bg-white text-[#7A8088]">
-                                ✎
-                              </button>
-                              <button
-                                onClick={() => handleDelete(site.id)}
-                                className="w-9 h-9 rounded-lg border border-[#F0B1B1] bg-white text-[#D85C5C]"
-                              >
-                                🗑
-                              </button>
-                            </div>
+                          <button
+  onClick={() =>
+    setModal({
+      open: true,
+      siteId: site.id,
+    })
+  }
+  className="w-9 h-9 rounded-lg border border-[#F0B1B1] bg-white text-[#D85C5C]"
+>
+  🗑
+</button>
                           </td>
                         </tr>
                       ))}
@@ -244,9 +251,7 @@ export default function SitesAndQuotas() {
                 </div>
               </section>
 
-              {/* Right panel */}
               <div className="space-y-6">
-                {/* Assign site */}
                 <section className="rounded-[24px] bg-white border border-[#E5E2DC] p-5">
                   <h3 className="text-[28px] font-bold text-[#2F343B]">
                     Assign Site
@@ -259,7 +264,9 @@ export default function SitesAndQuotas() {
                     <Field label="Site *">
                       <select
                         value={form.site}
-                        onChange={(e) => setForm((prev) => ({ ...prev, site: e.target.value }))}
+                        onChange={(e) =>
+                          setForm((prev) => ({ ...prev, site: e.target.value }))
+                        }
                         className="w-full px-4 py-3 rounded-[14px] border border-[#E5E2DC] bg-[#F7F7F5] outline-none text-sm"
                       >
                         <option value="">Select a site...</option>
@@ -275,7 +282,9 @@ export default function SitesAndQuotas() {
                       <input
                         type="number"
                         value={form.quota}
-                        onChange={(e) => setForm((prev) => ({ ...prev, quota: e.target.value }))}
+                        onChange={(e) =>
+                          setForm((prev) => ({ ...prev, quota: e.target.value }))
+                        }
                         placeholder="e.g., 50"
                         className="w-full px-4 py-3 rounded-[14px] border border-[#E5E2DC] bg-[#F7F7F5] outline-none text-sm"
                       />
@@ -285,7 +294,9 @@ export default function SitesAndQuotas() {
                       <input
                         type="number"
                         value={form.alternates}
-                        onChange={(e) => setForm((prev) => ({ ...prev, alternates: e.target.value }))}
+                        onChange={(e) =>
+                          setForm((prev) => ({ ...prev, alternates: e.target.value }))
+                        }
                         placeholder="e.g., 10"
                         className="w-full px-4 py-3 rounded-[14px] border border-[#E5E2DC] bg-[#F7F7F5] outline-none text-sm"
                       />
@@ -299,31 +310,42 @@ export default function SitesAndQuotas() {
                     </button>
                   </form>
                 </section>
-
-                {/* Session details */}
-                <section className="rounded-[24px] bg-white border border-[#E5E2DC] p-5">
-                  <h3 className="text-[28px] font-bold text-[#2F343B] mb-5">
-                    Session Details
-                  </h3>
-
-                  <div className="space-y-3">
-                    <DetailRow label="Session Name" value={`Session ${sessionId}`} />
-                    <DetailRow label="Dates" value="Oct 15 - Oct 30, 2024" />
-                    <DetailRow label="Draw Date" value="Oct 10, 2024" />
-                    <DetailRow label="Draw Location" value="Oran Regional Office" />
-                    <div className="rounded-[14px] bg-[#F9F8F6] px-4 py-3 flex items-center justify-between">
-                      <span className="text-sm text-[#7A8088]">Status</span>
-                      <span className="px-3 py-1 rounded-full text-xs font-semibold bg-[#D4F4DD] text-[#2D7A4A]">
-                        Open
-                      </span>
-                    </div>
-                  </div>
-                </section>
               </div>
             </div>
           </div>
         </main>
       </div>
+
+      {modal.open && (
+  <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
+    <div className="bg-white rounded-[20px] p-6 w-full max-w-[400px] shadow-lg">
+      
+      <h2 className="text-xl font-bold text-[#2F343B] mb-3">
+        Remove Site
+      </h2>
+
+      <p className="text-sm text-[#7A8088] mb-6">
+        Are you sure you want to remove this site from the session?
+      </p>
+
+      <div className="flex justify-end gap-3">
+        <button
+          onClick={() => setModal({ open: false, siteId: null })}
+          className="px-4 py-2 rounded-[12px] border border-[#E5E2DC] text-sm"
+        >
+          Cancel
+        </button>
+
+        <button
+          onClick={handleDelete}
+          className="px-4 py-2 rounded-[12px] bg-[#ED8D31] text-white text-sm font-medium"
+        >
+          Confirm
+        </button>
+      </div>
+    </div>
+  </div>
+)}
     </div>
   );
 }
@@ -345,15 +367,6 @@ function Field({ label, children }) {
         {label}
       </label>
       {children}
-    </div>
-  );
-}
-
-function DetailRow({ label, value }) {
-  return (
-    <div className="rounded-[14px] bg-[#F9F8F6] px-4 py-3 flex items-center justify-between">
-      <span className="text-sm text-[#7A8088]">{label}</span>
-      <span className="text-sm font-semibold text-[#2F343B]">{value}</span>
     </div>
   );
 }

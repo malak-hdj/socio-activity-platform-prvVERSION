@@ -9,7 +9,6 @@ import ManageRegistrations from "./pages/admin/ManageRegistrations";
 import ManageActivities from "./pages/admin/ManageActivities";
 import ModifyActivity from "./pages/admin/ModifyActivity";
 import ManageSessions from "./pages/admin/ManageSessions";
-import SitesAndQuotas from "./pages/admin/SitesAndQuotas";
 import LaunchDraw from "./pages/admin/LaunchDraw";
 import ManageWithdrawals from "./pages/admin/ManageWithdrawals";
 import Reports from "./pages/admin/Reports";
@@ -21,9 +20,11 @@ import Documents from "./pages/employee/Documents";
 import ParticipationHistory from "./pages/employee/ParticipationHistory";
 import Surveys from "./pages/employee/Surveys";
 import IdeaBox from "./pages/employee/IdeaBox";
-
-
-
+import CreateActivity from "./pages/admin/CreateActivity";
+import SessionDetails from "./pages/admin/SessionDetails";
+import EditSession from "./pages/admin/EditSession";
+import CreateSession from "./pages/admin/CreateSession";
+import SitesAndQuotas from "./pages/admin/SitesAndQuotas";
 
 
 function App() {
@@ -42,22 +43,42 @@ function App() {
         <Route path="/dashboard/history" element={<ParticipationHistory />} />
         <Route path="/dashboard/ideas" element={<IdeaBox />} />
         <Route path="/dashboard/admin/reports" element={<Reports />} />
+        <Route
+  path="/dashboard/admin/activities/:id/sessions/:sessionId/sites-quotas"
+  element={<SitesAndQuotas />}
+/>
         <Route path="/dashboard/documents" element={<Documents />} />
         <Route path="/dashboard/catalog" element={<ActivitiesCatalog />} />
+        <Route
+  path="/dashboard/admin/activities/create"
+  element={<CreateActivity />}
+/>
         <Route
   path="/dashboard/admin/withdrawals"
   element={<ManageWithdrawals />}
 />
         <Route path="/dashboard" element={<Dashboard />} />
         <Route path="/dashboard/admin/draw" element={<LaunchDraw />} />
-        <Route
-  path="/dashboard/admin/activities/:slug/sessions/:sessionId/sites-quotas"
-  element={<SitesAndQuotas />}
-/>
-        <Route
-  path="/dashboard/admin/activities/:slug/sessions"
+
+<Route
+  path="/dashboard/admin/activities/:id/sessions"
   element={<ManageSessions />}
 />
+
+<Route
+  path="/dashboard/admin/activities/:id/sessions/create"
+  element={<CreateSession />}
+ />
+
+<Route
+  path="/dashboard/admin/activities/:id/sessions/:sessionId"
+  element={<SessionDetails />}
+ />
+
+<Route
+  path="/dashboard/admin/activities/:id/sessions/:sessionId/edit"
+  element={<EditSession />}
+ />
         <Route path="/dashboard/admin/site" element={<ManageSite />} />
         <Route
   path="/dashboard/admin/activities/:slug/edit"

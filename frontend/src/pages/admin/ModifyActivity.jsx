@@ -356,7 +356,15 @@ export default function ModifyActivity() {
                   </h3>
 
                   <button
-                    onClick={handleArchive}
+                    onClick={(id) => {
+                      const confirmAction = window.confirm(
+                        "Are you sure you want to archive this activity?"
+                      );
+
+                      if (confirmAction) {
+                        alert(`Activity ${id} archived`);
+                      }
+                    }}
                     className="mt-4 w-full px-4 py-3 rounded-[14px] border border-[#F0B1B1] text-[#D85C5C] text-sm font-semibold bg-white hover:bg-[#FFF7F7] transition-colors"
                   >
                     Archive Activity
