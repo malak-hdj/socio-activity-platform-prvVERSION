@@ -82,7 +82,12 @@ export default function MyRequests() {
     setRequests((prev) =>
       prev.map((request) =>
         request.id === modal.requestId
-          ? { ...request, status: "Confirmed" }
+          ? {
+              ...request,
+              status: "Confirmed",
+              details:
+                "Your participation is fully confirmed. No further action is required.",
+            }
           : request
       )
     );
@@ -93,12 +98,23 @@ export default function MyRequests() {
     setRequests((prev) =>
       prev.map((request) =>
         request.id === modal.requestId
-          ? { ...request, status: "Withdrawn" }
+          ? {
+              ...request,
+              status: "Withdrawn",
+              details:
+                "You have withdrawn this request. It is no longer active.",
+            }
           : request
       )
     );
     closeModal();
   };
+
+  const canWithdraw = (status) =>
+    status === "Pending Draw" ||
+    status === "Under Review" ||
+    status === "Accepted" ||
+    status === "Confirmed";
 
   return (
     <>
@@ -116,7 +132,7 @@ export default function MyRequests() {
                 </h1>
                 <p className="text-[#7A8088] text-sm mt-2 max-w-[760px] leading-[170%]">
                   Track all your activity applications, follow their status, and
-                  review the latest updates for each request.
+                  manage confirmation or withdrawal when action is required.
                 </p>
               </div>
 
@@ -273,11 +289,11 @@ export default function MyRequests() {
                                   }
                                   className="px-3 py-1.5 rounded-lg bg-[#ED8D31] text-white text-sm font-medium"
                                 >
-                                  Confirm
+                                  Confirm participation
                                 </button>
                               )}
 
-                              {request.status === "Pending Draw" && (
+                              {canWithdraw(request.status) && (
                                 <button
                                   onClick={() =>
                                     setModal({

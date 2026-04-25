@@ -36,6 +36,14 @@ import AnnouncementsPage from "./pages/AnnouncementsPage";
 import ScrollToTop from "./components/ScrollToTop";
 import AnnouncementDetails from "./pages/AnnouncementDetails";
 import CreateSurveyNotice from "./pages/communicator/CreateSurveyNotice";
+import RunDraw from "./pages/admin/RunDraw";
+import NotificationsPage from "./pages/employee/NotificationsPage";
+import ManageFunctionalAdmins from "./pages/system/ManageFunctionalAdmins";
+import ManageCommunicators from "./pages/system/ManageCommunicators";
+import ManageSystemAdmins from "./pages/system/ManageSystemAdmins";
+import AuditLogPage from "./pages/system/AuditLogPage";
+
+
 
 
 function App() {
@@ -109,6 +117,24 @@ function App() {
 <Route
   path="/dashboard/communicator/surveys/create"
   element={<CreateSurveyNotice />}
+/>
+<Route path="/dashboard/admin/draw/run/:sessionId" element={<RunDraw />} />
+<Route path="/dashboard/notifications" element={<NotificationsPage />} />
+<Route
+  path="/dashboard/system/functional-admins"
+  element={<ManageFunctionalAdmins />}
+/>
+<Route
+  path="/dashboard/system/communicators"
+  element={<ManageCommunicators />}
+/>
+<Route
+  path="/dashboard/system/system-admins"
+  element={<ManageSystemAdmins />}
+/>
+<Route
+  path="/dashboard/system/audit-log"
+  element={<AuditLogPage />}
 />
 
 

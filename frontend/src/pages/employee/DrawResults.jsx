@@ -34,11 +34,11 @@ const initialResults = [
 ];
 
 export default function DrawResults() {
-  const [results, setResults] = useState(initialResults);
+  const [results] = useState(initialResults);
 
   const [modal, setModal] = useState({
     open: false,
-    type: null, // details | confirm
+    type: null, // details
     resultId: null,
   });
 
@@ -57,15 +57,6 @@ export default function DrawResults() {
     });
   };
 
-  const handleConfirm = () => {
-    setResults((prev) =>
-      prev.map((r) =>
-        r.id === modal.resultId ? { ...r, status: "Confirmed" } : r
-      )
-    );
-    closeModal();
-  };
-
   return (
     <>
       <div className="flex h-screen bg-[#F7F7F5]">
@@ -76,18 +67,16 @@ export default function DrawResults() {
 
           <main className="flex-1 overflow-y-auto p-6">
             <div className="space-y-6">
-              {/* Header */}
               <div>
                 <h1 className="text-[36px] font-extrabold text-[#2F343B]">
                   Draw Results
                 </h1>
                 <p className="text-[#7A8088] text-sm mt-2">
-                  Check the outcome of your activity applications and confirm your
-                  participation if selected.
+                  Check the outcome of your activity applications. To confirm participation
+                  or withdraw a request, go to your request management page.
                 </p>
               </div>
 
-              {/* Stats */}
               <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4">
                 <StatCard title="Selected" value={selected} />
                 <StatCard title="Waiting List" value={waiting} />
@@ -95,7 +84,6 @@ export default function DrawResults() {
                 <StatCard title="Confirmed" value={confirmed} />
               </div>
 
-              {/* Results table */}
               <section className="rounded-[24px] bg-white border border-[#E5E2DC] overflow-hidden">
                 <div className="px-5 py-4 border-b border-[#E5E2DC]">
                   <h2 className="text-[24px] font-bold text-[#2F343B]">
@@ -149,21 +137,6 @@ export default function DrawResults() {
 
                           <td className="px-5 py-5">
                             <div className="flex gap-2 flex-wrap">
-                              {item.status === "Selected" && (
-                                <button
-                                  onClick={() =>
-                                    setModal({
-                                      open: true,
-                                      type: "confirm",
-                                      resultId: item.id,
-                                    })
-                                  }
-                                  className="px-3 py-1.5 rounded-lg bg-[#ED8D31] text-white text-sm"
-                                >
-                                  Confirm
-                                </button>
-                              )}
-
                               {item.status === "Waiting List" && (
                                 <span className="text-sm text-[#7A8088] flex items-center">
                                   Waiting...
@@ -182,6 +155,12 @@ export default function DrawResults() {
                                 </span>
                               )}
 
+                              {item.status === "Selected" && (
+                                <span className="text-sm text-[#2D7A4A] font-semibold flex items-center">
+                                  Selected
+                                </span>
+                              )}
+
                               <button
                                 onClick={() =>
                                   setModal({
@@ -193,6 +172,10 @@ export default function DrawResults() {
                                 className="px-3 py-1.5 rounded-lg border border-[#E5E2DC] text-sm"
                               >
                                 Details
+                              </button>
+
+                              <button className="px-3 py-1.5 rounded-lg bg-[#ED8D31] text-white text-sm">
+                                Go to My Requests
                               </button>
                             </div>
                           </td>
@@ -207,7 +190,6 @@ export default function DrawResults() {
         </div>
       </div>
 
-      {/* Details Modal */}
       {modal.open && modal.type === "details" && selectedItem && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
           <div className="bg-white rounded-[20px] p-6 w-full max-w-[500px] shadow-lg">
@@ -225,7 +207,7 @@ export default function DrawResults() {
             <div className="rounded-[16px] bg-[#F9F8F6] p-4 mb-6">
               <p className="text-sm text-[#7A8088] leading-[170%]">
                 {selectedItem.status === "Selected" &&
-                  "You have been selected. Please confirm your participation before the deadline."}
+                  "You have been selected. To confirm your participation or withdraw this request, go to My Requests."}
 
                 {selectedItem.status === "Waiting List" &&
                   "You are currently on the waiting list. If a place becomes available, you may be promoted."}
@@ -244,41 +226,6 @@ export default function DrawResults() {
                 className="px-4 py-2 rounded-[12px] border border-[#E5E2DC]"
               >
                 Close
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Confirm Modal */}
-      {modal.open && modal.type === "confirm" && selectedItem && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
-          <div className="bg-white rounded-[20px] p-6 w-full max-w-[420px] shadow-lg">
-            <h2 className="text-xl font-bold text-[#2F343B] mb-3">
-              Confirm Participation
-            </h2>
-
-            <p className="text-sm text-[#7A8088] mb-6">
-              Are you sure you want to confirm your participation in{" "}
-              <span className="font-semibold text-[#2F343B]">
-                {selectedItem.activity}
-              </span>
-              ?
-            </p>
-
-            <div className="flex justify-end gap-3">
-              <button
-                onClick={closeModal}
-                className="px-4 py-2 rounded-[12px] border border-[#E5E2DC]"
-              >
-                Cancel
-              </button>
-
-              <button
-                onClick={handleConfirm}
-                className="px-4 py-2 rounded-[12px] bg-[#ED8D31] text-white"
-              >
-                Confirm
               </button>
             </div>
           </div>
