@@ -55,25 +55,31 @@ export default function ManageSystemAdmins() {
       setError("Search failed");
     }
   };
+  const API_URL = "http://127.0.0.1:8001/api";
 
+  const user = JSON.parse(localStorage.getItem("user"));
+  
   const handleAssign = async () => {
     if (!foundEmployee) return;
-
+  
     try {
       const res = await fetch(
         `${API_URL}/system/users/${foundEmployee.id}/roles/system-admin`,
         {
           method: "POST",
+          headers: {
+            "X-User-Id": user.id,
+          },
         }
       );
-
+  
       const data = await res.json();
-
+  
       if (!res.ok) {
         setError(data.message || "Could not assign role");
         return;
       }
-
+  
       setFoundEmployee(null);
       setSearchValue("");
       await loadSystemAdmins();
@@ -82,30 +88,32 @@ export default function ManageSystemAdmins() {
       setError("Could not assign role");
     }
   };
-
+  
   const handleRemove = async (id) => {
     try {
       const res = await fetch(
         `${API_URL}/system/users/${id}/roles/system-admin`,
         {
           method: "DELETE",
+          headers: {
+            "X-User-Id": user.id,
+          },
         }
       );
-
+  
       const data = await res.json();
-
+  
       if (!res.ok) {
         setError(data.message || "Could not remove role");
         return;
       }
-
+  
       await loadSystemAdmins();
     } catch (err) {
       console.error(err);
       setError("Could not remove role");
     }
   };
-
   return (
     <div className="flex h-screen bg-[#F7F7F5]">
       <DashboardSidebar />

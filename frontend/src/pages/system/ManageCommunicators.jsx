@@ -56,24 +56,32 @@ export default function ManageCommunicators() {
     }
   };
 
+  const API_URL = "http://127.0.0.1:8001/api";
+
+const user = JSON.parse(localStorage.getItem("user"));
+
+
   const handleAssign = async () => {
     if (!foundEmployee) return;
-
+  
     try {
       const res = await fetch(
         `${API_URL}/system/users/${foundEmployee.id}/roles/communicator`,
         {
           method: "POST",
+          headers: {
+            "X-User-Id": user.id,
+          },
         }
       );
-
+  
       const data = await res.json();
-
+  
       if (!res.ok) {
         setError(data.message || "Could not assign role");
         return;
       }
-
+  
       setFoundEmployee(null);
       setSearchValue("");
       await loadCommunicators();
@@ -89,23 +97,25 @@ export default function ManageCommunicators() {
         `${API_URL}/system/users/${id}/roles/communicator`,
         {
           method: "DELETE",
+          headers: {
+            "X-User-Id": user.id,
+          },
         }
       );
-
+  
       const data = await res.json();
-
+  
       if (!res.ok) {
         setError(data.message || "Could not remove role");
         return;
       }
-
+  
       await loadCommunicators();
     } catch (err) {
       console.error(err);
       setError("Could not remove role");
     }
   };
-
   return (
     <div className="flex h-screen bg-[#F7F7F5]">
       <DashboardSidebar />

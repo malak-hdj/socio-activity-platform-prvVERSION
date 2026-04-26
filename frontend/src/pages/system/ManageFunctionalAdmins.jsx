@@ -60,12 +60,17 @@ export default function ManageFunctionalAdmins() {
     if (!foundEmployee) return;
 
     try {
-      const res = await fetch(
-        `${API_URL}/system/users/${foundEmployee.id}/roles/functional-admin`,
-        {
-          method: "POST",
-        }
-      );
+        const user = JSON.parse(localStorage.getItem("user"));
+
+        const res = await fetch(
+          `${API_URL}/system/users/${foundEmployee.id}/roles/functional-admin`,
+          {
+            method: "POST",
+            headers: {
+              "X-User-Id": user.id,
+            },
+          }
+        );
 
       const data = await res.json();
 
@@ -85,12 +90,17 @@ export default function ManageFunctionalAdmins() {
 
   const handleRemove = async (id) => {
     try {
-      const res = await fetch(
-        `${API_URL}/system/users/${id}/roles/functional-admin`,
-        {
-          method: "DELETE",
-        }
-      );
+        const user = JSON.parse(localStorage.getItem("user"));
+
+        const res = await fetch(
+          `${API_URL}/system/users/${id}/roles/functional-admin`,
+          {
+            method: "DELETE",
+            headers: {
+              "X-User-Id": user.id,
+            },
+          }
+        );
 
       const data = await res.json();
 
