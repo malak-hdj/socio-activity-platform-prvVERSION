@@ -1,4 +1,4 @@
-import { Link, useLocation } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 
 const employeeItems = [
   { label: "Dashboard", path: "/dashboard", icon: "📊" },
@@ -44,11 +44,12 @@ function NavSection({ title, items, location }) {
       </p>
 
       {items.map((item) => {
-      const isActive =
-      item.path === "/dashboard"
-        ? location.pathname === "/dashboard"
-        : location.pathname === item.path ||
-          location.pathname.startsWith(`${item.path}/`);
+        const isActive =
+          item.path === "/dashboard"
+            ? location.pathname === "/dashboard"
+            : location.pathname === item.path ||
+              location.pathname.startsWith(`${item.path}/`);
+
         return (
           <Link
             key={item.path}
@@ -60,7 +61,6 @@ function NavSection({ title, items, location }) {
             }`}
           >
             <span className="w-5 text-center">{item.icon}</span>
-
             <span className="flex-1 text-[13px]">{item.label}</span>
 
             {item.badge && (
@@ -83,23 +83,37 @@ function NavSection({ title, items, location }) {
 
 export default function DashboardSidebar() {
   const location = useLocation();
+  const navigate = useNavigate();
+
+  const user = JSON.parse(localStorage.getItem("user"));
+
+  const roles = (user?.roles || []).map((role) => {
+    if (typeof role === "string") return role;
+    return role.name || role.role || role.label;
+  });
+
+  const isSystemAdmin = roles.includes("SYSTEM_ADMIN");
+  const isFunctionalAdmin = roles.includes("FUNCTIONAL_ADMIN");
+  const isCommunicator = roles.includes("COMMUNICATOR");
+
+  const handleLogout = () => {
+    localStorage.removeItem("user");
+    navigate("/");
+  };
 
   return (
     <aside className="w-[240px] min-w-[240px] h-screen bg-white border-r border-[#E5E2DC] flex flex-col sticky top-0">
-      {/* Logo */}
       <div className="flex items-center gap-2 px-4 py-5 border-b border-[#E5E2DC]">
         <img
           src="https://api.builder.io/api/v1/image/assets/TEMP/af72391ae8971f15efed2311d265b92f2f3a69fd?width=84"
           alt="Sonatrach"
           className="w-9 h-9 rounded-[10px] object-cover"
         />
-
         <span className="font-bold text-[#2F343B] text-sm tracking-tight">
           SONATRACH
         </span>
       </div>
 
-      {/* Navigation */}
       <nav className="flex-1 py-3 overflow-y-auto">
         <NavSection
           title="Employee space"
@@ -107,45 +121,43 @@ export default function DashboardSidebar() {
           location={location}
         />
 
-        <div className="my-3 border-t border-[#E5E2DC]" />
+        {(isFunctionalAdmin || isSystemAdmin) && (
+          <>
+            <div className="my-3 border-t border-[#E5E2DC]" />
+            <NavSection title="Admin tools" items={adminItems} location={location} />
+          </>
+        )}
 
-        <NavSection
-          title="Admin tools"
-          items={adminItems}
-          location={location}
-        />
+        {(isCommunicator || isSystemAdmin) && (
+          <>
+            <div className="my-3 border-t border-[#E5E2DC]" />
+            <NavSection
+              title="Communicator tools"
+              items={communicatorItems}
+              location={location}
+            />
+          </>
+        )}
 
-        <div className="my-3 border-t border-[#E5E2DC]" />
-
-        <NavSection
-          title="Communicator tools"
-          items={communicatorItems}
-          location={location}
-        />
-
-        <div className="my-3 border-t border-[#E5E2DC]" />
-
-        <NavSection
-          title="System Admin tools"
-          items={systemAdminItems}
-          location={location}
-        />
+        {isSystemAdmin && (
+          <>
+            <div className="my-3 border-t border-[#E5E2DC]" />
+            <NavSection
+              title="System Admin tools"
+              items={systemAdminItems}
+              location={location}
+            />
+          </>
+        )}
       </nav>
 
-      {/* Bottom role card */}
       <div className="p-3 border-t border-[#E5E2DC]">
-        <div className="rounded-[16px] bg-[#F5F4F1] p-3">
-          <p className="text-xs text-[#7A8088] mb-2">Connected role</p>
-
-          <p className="text-sm font-semibold text-[#2F343B] mb-2">
-            Employee + Functional Admin + Communicator + System Admin
-          </p>
-
-          <p className="text-xs text-[#7A8088] leading-[160%]">
-            You keep access to employee tools while managing activities,
-            communication content, and system role assignments.
-          </p>
-        </div>
+        <button
+          onClick={handleLogout}
+          className="w-full py-2 rounded-[12px] bg-[#ED8D31] text-white text-sm font-semibold hover:bg-[#d97d26] transition-colors"
+        >
+          Logout
+        </button>
       </div>
     </aside>
   );

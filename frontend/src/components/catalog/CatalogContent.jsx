@@ -1,55 +1,83 @@
+import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
-import { activities } from "../../data/activities";
 
-function ActivityCard({ activity, featured = false }) {
-  return (
-    <Link
-      to={`/activities/${activity.slug}`}
-      className={`relative overflow-hidden rounded-[24px] block group ${
-        featured ? "h-[340px]" : "h-[300px]"
-      }`}
-    >
-      <img
-        src={activity.image}
-        alt={activity.title}
-        className="absolute inset-0 w-full h-full object-cover group-hover:scale-[1.02] transition-transform duration-500"
-      />
+const defaultImage =
+  "https://images.unsplash.com/photo-1500530855697-b586d89ba3ee?auto=format&fit=crop&w=1200&q=80";
 
-      <div
-        className="absolute inset-0"
-        style={{
-          background:
-            "linear-gradient(180deg, rgba(47,52,59,0.12) 0%, rgba(47,52,59,0.20) 45%, rgba(47,52,59,0.82) 100%)",
-        }}
-      />
-
-      <div className="absolute top-4 left-4">
-        <span className="px-3 py-1.5 rounded-full bg-[rgba(255,255,255,0.92)] text-[#2F343B] text-xs font-semibold">
-          {activity.category}
-        </span>
-      </div>
-
-      <div className="absolute top-4 right-4">
-        <span className="px-3 py-1.5 rounded-full bg-[rgba(47,52,59,0.72)] text-white text-xs font-medium">
-          {activity.status}
-        </span>
-      </div>
-
-      <div className="absolute bottom-0 left-0 right-0 p-5">
-        <h3 className="text-white text-[22px] font-bold leading-[110%] mb-2">
-          {activity.title}
-        </h3>
-        <div className="text-[rgba(255,255,255,0.82)] text-sm">
-          {activity.location} · {activity.date}
+  function ActivityCard({ activity, featured = false }) {
+    return (
+      <Link
+        to={`/activities/${activity.id}`}
+        className={`relative overflow-hidden rounded-[24px] block group ${
+          featured ? "h-[340px]" : "h-[300px]"
+        }`}
+      >
+        <img
+          src={activity.image || defaultImage}
+          alt={activity.title}
+          className="absolute inset-0 w-full h-full object-cover group-hover:scale-[1.02] transition-transform duration-500"
+        />
+  
+        <div
+          className="absolute inset-0"
+          style={{
+            background:
+              "linear-gradient(180deg, rgba(47,52,59,0.12) 0%, rgba(47,52,59,0.20) 45%, rgba(47,52,59,0.82) 100%)",
+          }}
+        />
+  
+        <div className="absolute top-4 left-4">
+          <span className="px-3 py-1.5 rounded-full bg-[rgba(255,255,255,0.92)] text-[#2F343B] text-xs font-semibold">
+            {activity.category}
+          </span>
         </div>
-      </div>
-    </Link>
-  );
-}
+  
+        <div className="absolute top-4 right-4">
+          <span className="px-3 py-1.5 rounded-full bg-[rgba(47,52,59,0.72)] text-white text-xs font-medium">
+            {activity.status}
+          </span>
+        </div>
+  
+        <div className="absolute bottom-0 left-0 right-0 p-5">
+          <h3 className="text-white text-[22px] font-bold leading-[110%] mb-2">
+            {activity.title}
+          </h3>
+          <div className="text-[rgba(255,255,255,0.82)] text-sm">
+            {activity.category} · {activity.demand_level}
+          </div>
+        </div>
+      </Link>
+    );
+  }
 
 export default function CatalogContent({ compact = false }) {
+  const [activities, setActivities] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    fetch("http://127.0.0.1:8000/activities")
+      .then((res) => res.json())
+      .then((data) => {
+        setActivities(data.data || []);
+      })
+      .catch((error) => {
+        console.error("Error fetching activities:", error);
+      })
+      .finally(() => {
+        setLoading(false);
+      });
+  }, []);
+
   const featured = activities.slice(0, 2);
   const others = activities.slice(2);
+
+  if (loading) {
+    return (
+      <div className="px-4 py-10 text-center text-[#7A8088]">
+        Loading activities...
+      </div>
+    );
+  }
 
   return (
     <div className={compact ? "" : "px-4 py-10"}>
@@ -84,30 +112,38 @@ export default function CatalogContent({ compact = false }) {
             Upcoming
           </button>
 
-          <button className="px-5 py-3 rounded-[14px] border border-[#E5E2DC] bg-[#F7F7F5] text-[#50565E]">
+          <button className="px-5 py-3 rounded-[14px] bg-[#ED8D31] text-white font-medium">
             Open only
           </button>
-
-          <button className="px-5 py-3 rounded-[14px] bg-[#ED8D31] text-white font-medium">
-            Apply Filters
-          </button>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
-          <div className="lg:col-span-2">
-            <ActivityCard activity={featured[0]} featured />
+        {activities.length === 0 ? (
+          <div className="text-center text-[#7A8088] py-12">
+            No activities found.
           </div>
+        ) : (
+          <>
+            {featured.length > 0 && (
+              <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
+                <div className="lg:col-span-2">
+                  <ActivityCard activity={featured[0]} featured />
+                </div>
 
-          <div>
-            <ActivityCard activity={featured[1]} featured />
-          </div>
-        </div>
+                {featured[1] && (
+                  <div>
+                    <ActivityCard activity={featured[1]} featured />
+                  </div>
+                )}
+              </div>
+            )}
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5 mt-5">
-          {others.map((activity) => (
-            <ActivityCard key={activity.slug} activity={activity} />
-          ))}
-        </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5 mt-5">
+              {others.map((activity) => (
+                <ActivityCard key={activity.id} activity={activity} />
+              ))}
+            </div>
+          </>
+        )}
       </div>
     </div>
   );

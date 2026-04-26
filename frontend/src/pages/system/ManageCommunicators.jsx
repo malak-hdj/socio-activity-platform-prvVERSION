@@ -1,100 +1,109 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import DashboardSidebar from "../../components/dashboard/DashboardSidebar";
 import DashboardTopBar from "../../components/dashboard/DashboardTopBar";
 
-const initialCommunicators = [
-  {
-    id: 1,
-    name: "Rania B.",
-    matricule: "EMP-2334",
-    department: "Communication",
-    email: "rania.b@sonatrach.dz",
-    assignedOn: "Oct 08, 2024",
-    status: "Active",
-  },
-];
-
-const employees = [
-  {
-    id: 2,
-    name: "Ahmed K.",
-    matricule: "EMP-2041",
-    department: "Social Services",
-    email: "ahmed.k@sonatrach.dz",
-  },
-  {
-    id: 3,
-    name: "Karim T.",
-    matricule: "EMP-1763",
-    department: "Operations",
-    email: "karim.t@sonatrach.dz",
-  },
-  {
-    id: 4,
-    name: "Samira G.",
-    matricule: "EMP-2210",
-    department: "Finance",
-    email: "samira.g@sonatrach.dz",
-  },
-];
+const API_URL = "http://127.0.0.1:8001/api";
 
 export default function ManageCommunicators() {
-  const [communicators, setCommunicators] = useState(initialCommunicators);
+  const [communicators, setCommunicators] = useState([]);
   const [searchValue, setSearchValue] = useState("");
   const [foundEmployee, setFoundEmployee] = useState(null);
   const [error, setError] = useState("");
+  const [loading, setLoading] = useState(true);
 
-  const handleSearch = () => {
+  const loadCommunicators = async () => {
+    try {
+      const res = await fetch(`${API_URL}/system/roles/communicators`);
+      const data = await res.json();
+      setCommunicators(data.data || []);
+    } catch (err) {
+      console.error(err);
+      setError("Could not load communicators");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    loadCommunicators();
+  }, []);
+
+  const handleSearch = async () => {
     setError("");
     setFoundEmployee(null);
 
     if (!searchValue.trim()) {
-      setError("Please enter employee ID or matricule");
+      setError("Please enter employee number or user ID");
       return;
     }
 
-    const query = searchValue.toLowerCase();
+    try {
+      const res = await fetch(
+        `${API_URL}/system/employees/search?query=${searchValue}`
+      );
 
-    const employee = employees.find(
-      (e) => String(e.id) === query || e.matricule.toLowerCase() === query
-    );
+      const data = await res.json();
 
-    if (!employee) {
-      setError("Employee not found");
-      return;
+      if (!res.ok) {
+        setError(data.message || "Employee not found");
+        return;
+      }
+
+      setFoundEmployee(data.data);
+    } catch (err) {
+      console.error(err);
+      setError("Search failed");
     }
-
-    const alreadyHasRole = communicators.some((c) => c.id === employee.id);
-
-    if (alreadyHasRole) {
-      setError("This employee already has the Communicator role");
-      return;
-    }
-
-    setFoundEmployee(employee);
   };
 
-  const handleAssign = () => {
+  const handleAssign = async () => {
     if (!foundEmployee) return;
 
-    const newCommunicator = {
-      ...foundEmployee,
-      assignedOn: new Date().toLocaleDateString("en-US", {
-        month: "short",
-        day: "2-digit",
-        year: "numeric",
-      }),
-      status: "Active",
-    };
+    try {
+      const res = await fetch(
+        `${API_URL}/system/users/${foundEmployee.id}/roles/communicator`,
+        {
+          method: "POST",
+        }
+      );
 
-    setCommunicators((prev) => [newCommunicator, ...prev]);
-    setFoundEmployee(null);
-    setSearchValue("");
-    setError("");
+      const data = await res.json();
+
+      if (!res.ok) {
+        setError(data.message || "Could not assign role");
+        return;
+      }
+
+      setFoundEmployee(null);
+      setSearchValue("");
+      await loadCommunicators();
+    } catch (err) {
+      console.error(err);
+      setError("Could not assign role");
+    }
   };
 
-  const handleRemove = (id) => {
-    setCommunicators((prev) => prev.filter((c) => c.id !== id));
+  const handleRemove = async (id) => {
+    try {
+      const res = await fetch(
+        `${API_URL}/system/users/${id}/roles/communicator`,
+        {
+          method: "DELETE",
+        }
+      );
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        setError(data.message || "Could not remove role");
+        return;
+      }
+
+      await loadCommunicators();
+    } catch (err) {
+      console.error(err);
+      setError("Could not remove role");
+    }
   };
 
   return (
@@ -115,7 +124,8 @@ export default function ManageCommunicators() {
             </h1>
 
             <p className="text-[#7A8088] text-sm mt-2">
-              Search an employee by ID or matricule and assign the Communicator role.
+              Search an employee by employee number or user ID and assign the
+              Communicator role.
             </p>
           </div>
 
@@ -132,13 +142,13 @@ export default function ManageCommunicators() {
                   setFoundEmployee(null);
                   setError("");
                 }}
-                placeholder="Enter ID or matricule..."
+                placeholder="Enter employee number, e.g. 002016"
                 className="flex-1 px-4 py-3 rounded-[14px] border border-[#E5E2DC] bg-[#F7F7F5] outline-none"
               />
 
               <button
                 onClick={handleSearch}
-                className="px-5 py-3 rounded-[14px] border border-[#E5E2DC] bg-white"
+                className="px-5 py-3 rounded-[14px] border border-[#E5E2DC] bg-white hover:bg-[#F7F7F5]"
               >
                 Search
               </button>
@@ -149,9 +159,12 @@ export default function ManageCommunicators() {
             {foundEmployee && (
               <div className="mt-4 flex justify-between items-center border border-[#E5E2DC] bg-[#FBFAF8] p-4 rounded-[14px]">
                 <div>
-                  <p className="font-semibold text-[#2F343B]">{foundEmployee.name}</p>
+                  <p className="font-semibold text-[#2F343B]">
+                    {foundEmployee.name} {foundEmployee.first_name}
+                  </p>
+
                   <p className="text-xs text-[#7A8088]">
-                    {foundEmployee.matricule} · {foundEmployee.department} · {foundEmployee.email}
+                    {foundEmployee.employee_number} · {foundEmployee.email}
                   </p>
                 </div>
 
@@ -172,44 +185,58 @@ export default function ManageCommunicators() {
               </h2>
             </div>
 
-            <table className="w-full">
-              <thead className="bg-[#FBFAF8] text-xs text-gray-500">
-                <tr>
-                  <th className="px-5 py-3 text-left">Name</th>
-                  <th className="px-5 py-3 text-left">Matricule</th>
-                  <th className="px-5 py-3 text-left">Department</th>
-                  <th className="px-5 py-3 text-left">Assigned</th>
-                  <th className="px-5 py-3 text-left">Action</th>
-                </tr>
-              </thead>
-
-              <tbody>
-                {communicators.map((c) => (
-                  <tr key={c.id} className="border-t">
-                    <td className="px-5 py-4">{c.name}</td>
-                    <td className="px-5 py-4">{c.matricule}</td>
-                    <td className="px-5 py-4">{c.department}</td>
-                    <td className="px-5 py-4">{c.assignedOn}</td>
-                    <td className="px-5 py-4">
-                      <button
-                        onClick={() => handleRemove(c.id)}
-                        className="text-red-500"
-                      >
-                        Remove
-                      </button>
-                    </td>
-                  </tr>
-                ))}
-
-                {communicators.length === 0 && (
+            {loading ? (
+              <div className="p-6 text-[#7A8088]">Loading...</div>
+            ) : (
+              <table className="w-full">
+                <thead className="bg-[#FBFAF8] text-xs text-gray-500">
                   <tr>
-                    <td colSpan="5" className="text-center py-6 text-gray-400">
-                      No communicators yet
-                    </td>
+                    <th className="px-5 py-3 text-left">Name</th>
+                    <th className="px-5 py-3 text-left">Employee Number</th>
+                    <th className="px-5 py-3 text-left">Email</th>
+                    <th className="px-5 py-3 text-left">Status</th>
+                    <th className="px-5 py-3 text-left">Action</th>
                   </tr>
-                )}
-              </tbody>
-            </table>
+                </thead>
+
+                <tbody>
+                  {communicators.map((communicator) => (
+                    <tr key={communicator.id} className="border-t">
+                      <td className="px-5 py-4">
+                        {communicator.name} {communicator.first_name}
+                      </td>
+
+                      <td className="px-5 py-4">
+                        {communicator.employee_number}
+                      </td>
+
+                      <td className="px-5 py-4">{communicator.email}</td>
+
+                      <td className="px-5 py-4">
+                        {communicator.active ? "Active" : "Inactive"}
+                      </td>
+
+                      <td className="px-5 py-4">
+                        <button
+                          onClick={() => handleRemove(communicator.id)}
+                          className="text-red-500 font-semibold"
+                        >
+                          Remove
+                        </button>
+                      </td>
+                    </tr>
+                  ))}
+
+                  {communicators.length === 0 && (
+                    <tr>
+                      <td colSpan="5" className="text-center py-6 text-gray-400">
+                        No communicators yet
+                      </td>
+                    </tr>
+                  )}
+                </tbody>
+              </table>
+            )}
           </section>
         </main>
       </div>

@@ -8,10 +8,48 @@ export default function Login() {
   const [password, setPassword] = useState("");
   const [rememberMe, setRememberMe] = useState(false);
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    // Handle login logic here
-    console.log("Login submitted", { employeeId, rememberMe });
+  
+    try {
+      const res = await fetch("http://127.0.0.1:8001/api/login", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          employee_number: employeeId,
+          password: password,
+        }),
+      });
+  
+      const data = await res.json();
+  
+      if (res.ok) {
+        console.log("Login success:", data);
+  
+        // ✅ save user
+        localStorage.setItem("user", JSON.stringify(data.user));
+  
+        // 🚀 redirect by role
+        if (data.user.role === "ADMIN_SYSTEME") {
+          window.location.href = "/dashboard/system";
+        } else if (data.user.role === "ADMIN_FONCTIONNEL") {
+          window.location.href = "/dashboard/admin";
+        } else if (data.user.role === "COMMUNICATEUR") {
+          window.location.href = "/dashboard/communicator";
+        } else {
+          window.location.href = "/dashboard";
+        }
+  
+      } else {
+        alert(data.message);
+      }
+  
+    } catch (error) {
+      console.error("Login error:", error);
+      alert("Server error. Try again.");
+    }
   };
 
   return (

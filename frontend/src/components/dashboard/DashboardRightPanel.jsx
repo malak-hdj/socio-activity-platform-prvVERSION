@@ -1,15 +1,32 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 export default function DashboardRightPanel() {
+  const [dashboardData, setDashboardData] = useState(null);
   const [ideaForm, setIdeaForm] = useState({
     title: "",
     description: "",
   });
 
+  useEffect(() => {
+    fetch("http://127.0.0.1:8001/api/dashboard")
+      .then((res) => res.json())
+      .then((data) => {
+        setDashboardData(data.data);
+      })
+      .catch((error) => {
+        console.error("Right panel dashboard error:", error);
+      });
+  }, []);
+
   const handleSubmitIdea = (e) => {
     e.preventDefault();
+
     console.log("Idea submitted:", ideaForm);
-    setIdeaForm({ title: "", description: "" });
+
+    setIdeaForm({
+      title: "",
+      description: "",
+    });
   };
 
   return (
@@ -39,13 +56,13 @@ export default function DashboardRightPanel() {
           </div>
         </div>
 
-        <div className="bg-white rounded-lg border border-[#D4F4DD] p-4 mb-4">
-          <p className="text-xs font-semibold text-[#2D7A4A] mb-2">
-            Congratulations!
+        <div className="bg-white rounded-lg border border-[#E5E2DC] p-4 mb-4">
+          <p className="text-xs font-semibold text-[#2F343B] mb-2">
+            No draw result yet
           </p>
           <p className="text-xs text-[#7A8088] leading-relaxed">
-            You have been selected for the Summer Camp activity. Please finalize
-            your required documents.
+            Your latest draw result will appear here after registrations and draw
+            launch are connected.
           </p>
         </div>
 
@@ -60,38 +77,14 @@ export default function DashboardRightPanel() {
           Documents to provide
         </h3>
 
-        <div className="space-y-3">
-          {[
-            {
-              icon: "📋",
-              title: "Medical Certificate",
-              desc: "Required for Summer Camp",
-            },
-            {
-              icon: "📄",
-              title: "Family Booklet Copy",
-              desc: "Needed before Oct 05, 2024",
-            },
-          ].map((doc, i) => (
-            <div
-              key={i}
-              className="flex items-start justify-between p-3 rounded-lg bg-[#F5F4F1] border border-[#E5E2DC]"
-            >
-              <div className="flex gap-2 flex-1">
-                <span className="text-lg flex-shrink-0">{doc.icon}</span>
-                <div>
-                  <p className="text-xs font-semibold text-[#2F343B]">
-                    {doc.title}
-                  </p>
-                  <p className="text-xs text-[#7A8088]">{doc.desc}</p>
-                </div>
-              </div>
-
-              <button className="text-xs font-semibold text-[#ED8D31] hover:opacity-80 transition-opacity flex-shrink-0">
-                Upload
-              </button>
-            </div>
-          ))}
+        <div className="rounded-lg bg-[#F5F4F1] border border-[#E5E2DC] p-3">
+          <p className="text-xs font-semibold text-[#2F343B] mb-1">
+            No pending documents
+          </p>
+          <p className="text-xs text-[#7A8088] leading-relaxed">
+            Required documents will appear here after the documents module is
+            connected.
+          </p>
         </div>
       </div>
 
@@ -104,20 +97,48 @@ export default function DashboardRightPanel() {
         <div className="rounded-lg border border-[#E5E2DC] p-3 bg-white hover:shadow-sm transition-shadow">
           <div className="flex items-start gap-2 mb-2">
             <div className="w-6 h-6 rounded-lg bg-[#ED8D31] flex items-center justify-center flex-shrink-0">
-              <span className="text-xs text-white font-bold">⏱</span>
+              <span className="text-xs text-white font-bold">📋</span>
             </div>
 
             <div className="flex-1">
               <p className="text-xs font-semibold text-[#2F343B]">
-                Q3 Activities Satisfaction
+                No active surveys yet
               </p>
-              <p className="text-xs text-[#7A8088] mt-0.5">Takes ~2 mins</p>
+              <p className="text-xs text-[#7A8088] mt-0.5">
+                Surveys will appear when communicator tools are connected.
+              </p>
             </div>
           </div>
+        </div>
+      </div>
 
-          <button className="w-full text-xs font-semibold text-[#ED8D31] hover:opacity-80 transition-opacity mt-2">
-            Participate
-          </button>
+      {/* Platform Summary */}
+      <div className="rounded-[20px] bg-[#F5F4F1] border border-[#E5E2DC] p-5">
+        <h3 className="font-bold text-[#2F343B] text-sm mb-4">
+          Platform summary
+        </h3>
+
+        <div className="space-y-3 text-xs">
+          <div className="flex justify-between">
+            <span className="text-[#7A8088]">Activities</span>
+            <span className="font-semibold text-[#2F343B]">
+              {dashboardData?.total_activities ?? 0}
+            </span>
+          </div>
+
+          <div className="flex justify-between">
+            <span className="text-[#7A8088]">Open activities</span>
+            <span className="font-semibold text-[#2F343B]">
+              {dashboardData?.active_activities ?? 0}
+            </span>
+          </div>
+
+          <div className="flex justify-between">
+            <span className="text-[#7A8088]">Pending requests</span>
+            <span className="font-semibold text-[#2F343B]">
+              {dashboardData?.pending_registrations ?? 0}
+            </span>
+          </div>
         </div>
       </div>
 

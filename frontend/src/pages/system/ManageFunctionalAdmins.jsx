@@ -1,108 +1,109 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import DashboardSidebar from "../../components/dashboard/DashboardSidebar";
 import DashboardTopBar from "../../components/dashboard/DashboardTopBar";
 
-const initialFunctionalAdmins = [
-  {
-    id: 1,
-    name: "Ahmed K.",
-    matricule: "EMP-2041",
-    department: "Social Services",
-    email: "ahmed.k@sonatrach.dz",
-    assignedOn: "Oct 12, 2024",
-    status: "Active",
-  },
-];
-
-const employees = [
-  {
-    id: 2,
-    name: "Nadia M.",
-    matricule: "EMP-1987",
-    department: "HR",
-    email: "nadia.m@sonatrach.dz",
-  },
-  {
-    id: 3,
-    name: "Karim T.",
-    matricule: "EMP-1763",
-    department: "Operations",
-    email: "karim.t@sonatrach.dz",
-  },
-  {
-    id: 4,
-    name: "Samira G.",
-    matricule: "EMP-2210",
-    department: "Finance",
-    email: "samira.g@sonatrach.dz",
-  },
-];
+const API_URL = "http://127.0.0.1:8001/api";
 
 export default function ManageFunctionalAdmins() {
-  const [functionalAdmins, setFunctionalAdmins] = useState(initialFunctionalAdmins);
-
+  const [functionalAdmins, setFunctionalAdmins] = useState([]);
   const [searchValue, setSearchValue] = useState("");
   const [foundEmployee, setFoundEmployee] = useState(null);
   const [error, setError] = useState("");
+  const [loading, setLoading] = useState(true);
 
-  const handleSearch = () => {
+  const loadFunctionalAdmins = async () => {
+    try {
+      const res = await fetch(`${API_URL}/system/roles/functional-admins`);
+      const data = await res.json();
+      setFunctionalAdmins(data.data || []);
+    } catch (err) {
+      console.error(err);
+      setError("Could not load functional admins");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    loadFunctionalAdmins();
+  }, []);
+
+  const handleSearch = async () => {
     setError("");
     setFoundEmployee(null);
 
     if (!searchValue.trim()) {
-      setError("Please enter employee ID or matricule");
+      setError("Please enter employee number or user ID");
       return;
     }
 
-    const query = searchValue.toLowerCase();
+    try {
+      const res = await fetch(
+        `${API_URL}/system/employees/search?query=${searchValue}`
+      );
 
-    const employee = employees.find(
-      (e) =>
-        String(e.id) === query ||
-        e.matricule.toLowerCase() === query
-    );
+      const data = await res.json();
 
-    if (!employee) {
-      setError("Employee not found");
-      return;
+      if (!res.ok) {
+        setError(data.message || "Employee not found");
+        return;
+      }
+
+      setFoundEmployee(data.data);
+    } catch (err) {
+      console.error(err);
+      setError("Search failed");
     }
-
-    const alreadyAdmin = functionalAdmins.some(
-      (a) => a.id === employee.id
-    );
-
-    if (alreadyAdmin) {
-      setError("This employee already has the role");
-      return;
-    }
-
-    setFoundEmployee(employee);
   };
 
-  const handleAssign = () => {
+  const handleAssign = async () => {
     if (!foundEmployee) return;
 
-    const newAdmin = {
-      ...foundEmployee,
-      assignedOn: new Date().toLocaleDateString("en-US", {
-        month: "short",
-        day: "2-digit",
-        year: "numeric",
-      }),
-      status: "Active",
-    };
+    try {
+      const res = await fetch(
+        `${API_URL}/system/users/${foundEmployee.id}/roles/functional-admin`,
+        {
+          method: "POST",
+        }
+      );
 
-    setFunctionalAdmins((prev) => [newAdmin, ...prev]);
+      const data = await res.json();
 
-    setFoundEmployee(null);
-    setSearchValue("");
-    setError("");
+      if (!res.ok) {
+        setError(data.message || "Could not assign role");
+        return;
+      }
+
+      setFoundEmployee(null);
+      setSearchValue("");
+      await loadFunctionalAdmins();
+    } catch (err) {
+      console.error(err);
+      setError("Could not assign role");
+    }
   };
 
-  const handleRemove = (id) => {
-    setFunctionalAdmins((prev) =>
-      prev.filter((a) => a.id !== id)
-    );
+  const handleRemove = async (id) => {
+    try {
+      const res = await fetch(
+        `${API_URL}/system/users/${id}/roles/functional-admin`,
+        {
+          method: "DELETE",
+        }
+      );
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        setError(data.message || "Could not remove role");
+        return;
+      }
+
+      await loadFunctionalAdmins();
+    } catch (err) {
+      console.error(err);
+      setError("Could not remove role");
+    }
   };
 
   return (
@@ -113,8 +114,6 @@ export default function ManageFunctionalAdmins() {
         <DashboardTopBar />
 
         <main className="flex-1 overflow-y-auto p-6 space-y-6">
-
-          {/* Header */}
           <div>
             <p className="text-sm font-semibold text-[#ED8D31] mb-2">
               System admin tools
@@ -123,40 +122,48 @@ export default function ManageFunctionalAdmins() {
             <h1 className="text-[36px] font-extrabold text-[#2F343B]">
               Manage Functional Admins
             </h1>
+
+            <p className="text-[#7A8088] text-sm mt-2">
+              Search an employee by employee number or user ID and assign the Functional Admin role.
+            </p>
           </div>
 
-          {/* Search Section */}
           <section className="rounded-[24px] bg-white border border-[#E5E2DC] p-5">
             <h2 className="text-[22px] font-bold text-[#2F343B] mb-4">
-              Assign Role
+              Assign Functional Admin Role
             </h2>
 
             <div className="flex gap-3">
               <input
                 value={searchValue}
-                onChange={(e) => setSearchValue(e.target.value)}
-                placeholder="Enter ID or matricule..."
+                onChange={(e) => {
+                  setSearchValue(e.target.value);
+                  setFoundEmployee(null);
+                  setError("");
+                }}
+                placeholder="Enter employee number, e.g. 002016"
                 className="flex-1 px-4 py-3 rounded-[14px] border border-[#E5E2DC] bg-[#F7F7F5] outline-none"
               />
 
               <button
                 onClick={handleSearch}
-                className="px-5 py-3 rounded-[14px] border border-[#E5E2DC] bg-white"
+                className="px-5 py-3 rounded-[14px] border border-[#E5E2DC] bg-white hover:bg-[#F7F7F5]"
               >
                 Search
               </button>
             </div>
 
-            {error && (
-              <p className="text-sm text-red-500 mt-3">{error}</p>
-            )}
+            {error && <p className="text-sm text-red-500 mt-3">{error}</p>}
 
             {foundEmployee && (
-              <div className="mt-4 flex justify-between items-center border p-4 rounded-[14px]">
+              <div className="mt-4 flex justify-between items-center border border-[#E5E2DC] bg-[#FBFAF8] p-4 rounded-[14px]">
                 <div>
-                  <p className="font-semibold">{foundEmployee.name}</p>
-                  <p className="text-xs text-gray-500">
-                    {foundEmployee.matricule} · {foundEmployee.department}
+                  <p className="font-semibold text-[#2F343B]">
+                    {foundEmployee.name} {foundEmployee.first_name}
+                  </p>
+
+                  <p className="text-xs text-[#7A8088]">
+                    {foundEmployee.employee_number} · {foundEmployee.email}
                   </p>
                 </div>
 
@@ -170,54 +177,62 @@ export default function ManageFunctionalAdmins() {
             )}
           </section>
 
-          {/* Table */}
           <section className="rounded-[24px] bg-white border border-[#E5E2DC] overflow-hidden">
             <div className="px-5 py-4 border-b">
-              <h2 className="font-bold text-lg">
+              <h2 className="font-bold text-lg text-[#2F343B]">
                 Current Functional Admins
               </h2>
             </div>
 
-            <table className="w-full">
-              <thead className="bg-[#FBFAF8] text-xs text-gray-500">
-                <tr>
-                  <th className="px-5 py-3 text-left">Name</th>
-                  <th className="px-5 py-3 text-left">Matricule</th>
-                  <th className="px-5 py-3 text-left">Department</th>
-                  <th className="px-5 py-3 text-left">Assigned</th>
-                  <th className="px-5 py-3 text-left">Action</th>
-                </tr>
-              </thead>
-
-              <tbody>
-                {functionalAdmins.map((a) => (
-                  <tr key={a.id} className="border-t">
-                    <td className="px-5 py-4">{a.name}</td>
-                    <td className="px-5 py-4">{a.matricule}</td>
-                    <td className="px-5 py-4">{a.department}</td>
-                    <td className="px-5 py-4">{a.assignedOn}</td>
-                    <td className="px-5 py-4">
-                      <button
-                        onClick={() => handleRemove(a.id)}
-                        className="text-red-500"
-                      >
-                        Remove
-                      </button>
-                    </td>
-                  </tr>
-                ))}
-
-                {functionalAdmins.length === 0 && (
+            {loading ? (
+              <div className="p-6 text-[#7A8088]">Loading...</div>
+            ) : (
+              <table className="w-full">
+                <thead className="bg-[#FBFAF8] text-xs text-gray-500">
                   <tr>
-                    <td colSpan="5" className="text-center py-6 text-gray-400">
-                      No admins yet
-                    </td>
+                    <th className="px-5 py-3 text-left">Name</th>
+                    <th className="px-5 py-3 text-left">Employee Number</th>
+                    <th className="px-5 py-3 text-left">Email</th>
+                    <th className="px-5 py-3 text-left">Status</th>
+                    <th className="px-5 py-3 text-left">Action</th>
                   </tr>
-                )}
-              </tbody>
-            </table>
-          </section>
+                </thead>
 
+                <tbody>
+                  {functionalAdmins.map((admin) => (
+                    <tr key={admin.id} className="border-t">
+                      <td className="px-5 py-4">
+                        {admin.name} {admin.first_name}
+                      </td>
+                      <td className="px-5 py-4">
+                        {admin.employee_number}
+                      </td>
+                      <td className="px-5 py-4">{admin.email}</td>
+                      <td className="px-5 py-4">
+                        {admin.active ? "Active" : "Inactive"}
+                      </td>
+                      <td className="px-5 py-4">
+                        <button
+                          onClick={() => handleRemove(admin.id)}
+                          className="text-red-500 font-semibold"
+                        >
+                          Remove
+                        </button>
+                      </td>
+                    </tr>
+                  ))}
+
+                  {functionalAdmins.length === 0 && (
+                    <tr>
+                      <td colSpan="5" className="text-center py-6 text-gray-400">
+                        No functional admins yet
+                      </td>
+                    </tr>
+                  )}
+                </tbody>
+              </table>
+            )}
+          </section>
         </main>
       </div>
     </div>
